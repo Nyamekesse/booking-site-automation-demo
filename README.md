@@ -1,4 +1,4 @@
-# Python Selenium Automation Demo
+# Booking Site Automation Demo
 
 This mini project will serves as a guide to web automation. It has most of the functionalities you will perform when automating task on the web using Python Selenium library.
 
