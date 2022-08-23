@@ -203,3 +203,8 @@ class Booking(webdriver.Chrome):
     def filter_result(self, number: int):
         filter_by_stars = Resultfilter(browser=self)
         filter_by_stars.apply_rating(number)
+
+    def results(self):
+        results = self.find_element(By.CLASS_NAME, 'd4924c9e74').find_elements(By.CSS_SELECTOR,
+                                                                               'div[data-testid="property-card"]')
+        print(f"Total number of search per your data specified is: {len(results)}")

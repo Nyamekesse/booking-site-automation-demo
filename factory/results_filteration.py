@@ -14,3 +14,6 @@ class Resultfilter():
             for rating in get_star_children:
                 if str(star_rating) in rating.get_attribute("data-filters-item"):
                     rating.click()
+
+
+
