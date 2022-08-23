@@ -10,3 +10,5 @@ NUMBER_OF_CHILDREN = 2
 AGES_OF_CHILDREN = [16, 17]
 # maximum number of rooms should be 30 and minimum number must be 1
 NUMBER_OF_ROOMS = 3
+# maximum number must be 5, specify 0 for unrated
+STAR_RATING = 3

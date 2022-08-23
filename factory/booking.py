@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -7,10 +8,11 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.support.ui import WebDriverWait
 
 from config import URL, driver_wait_in_seconds
+from factory.results_filteration import Resultfilter
 
 
 class Booking(webdriver.Chrome):
-    def __init__(self, driver_path=r"C:\selenium-chrome-drivers\chromedriver_win32", teardown=False):
+    def __init__(self, driver_path=r"C:\selenium-chrome-drivers\chromedriver_win32", teardown: bool = None):
         self.driver_path = driver_path
         self.teardown = teardown
         os.environ['PATH'] += driver_path
@@ -111,7 +113,7 @@ class Booking(webdriver.Chrome):
     def __click_search(self):
         self.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 
-    def __set_children_age(self, age_lists: list, number: int) -> bool:
+    def __set_children_age(self, age_lists: List, number: int) -> bool:
         """
         method sets the individual children ages
         :param age_lists:
@@ -136,7 +138,7 @@ class Booking(webdriver.Chrome):
                 current_age_position += 1  # increase position by 1
             return True
 
-    def specify_children_number(self, number: int, list_of_children_ages: list) -> bool:
+    def specify_children_number(self, number: int, list_of_children_ages: List) -> bool:
         continue_loop = True
         if not number:
             raise Exception("Number should not be empty")
@@ -197,3 +199,7 @@ class Booking(webdriver.Chrome):
                 self.__click_search()
             except Exception as e:
                 print(e)
+
+    def filter_result(self, number: int):
+        filter_by_stars = Resultfilter(browser=self)
+        filter_by_stars.apply_rating(number)
