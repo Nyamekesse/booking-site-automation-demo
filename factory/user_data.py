@@ -1,3 +1,6 @@
+URL = "https://www.booking.com"
+
+
 CURRENCY = 'AUD'
 DESTINATION = "New York"
 # date follows yyyy-mm-dd format

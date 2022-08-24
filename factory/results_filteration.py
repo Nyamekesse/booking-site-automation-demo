@@ -2,7 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
-class Resultfilter():
+class ResultFilter():
     def __init__(self, browser: WebDriver):
         self.browser = browser
 
@@ -14,6 +14,5 @@ class Resultfilter():
             for rating in get_star_children:
                 if str(star_rating) in rating.get_attribute("data-filters-item"):
                     rating.click()
-
 
 

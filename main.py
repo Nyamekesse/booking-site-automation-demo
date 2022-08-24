@@ -2,7 +2,7 @@ from factory.booking import Booking
 from factory.user_data import *
 
 with Booking(teardown=False) as browser:
-    browser.start_page()
+    browser.start_page(URL)
     browser.select_currency(CURRENCY)
     browser.search_destination(DESTINATION)
     browser.choose_date(check_in_date=CHECK_IN_DATE, check_out_date=CHECK_OUT_DATE)
