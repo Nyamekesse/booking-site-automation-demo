@@ -17,21 +17,22 @@ class Booking(webdriver.Chrome):
     """
     driver_wait_in_seconds = 10
 
-    def __init__(self, driver_path=r"C:\selenium-chrome-drivers\chromedriver_win32", teardown: bool = None):
+    def __init__(self, driver_path=r"C:\selenium-chrome-drivers\chromedriver_win32", terminate: bool = None):
         self.driver_path = driver_path
-        self.teardown = teardown
+        self.terminate = terminate
         os.environ['PATH'] += driver_path
         super(Booking, self).__init__()
         self.implicitly_wait(Booking.driver_wait_in_seconds)
         self.maximize_window()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.teardown:
+        if self.terminate:
             self.quit()
 
     def start_page(self, url: str) -> None:
         """
         opens the specified URL
+        checks for the presence of the accept cookie button and clicks on it
         :param url: link to the website
         :return: none
         """
@@ -101,14 +102,32 @@ class Booking(webdriver.Chrome):
             except Exception as e:
                 logging.exception(e)
 
-    def specify_adults_number(self, number: int) -> None:
+    def __set_loop_for_number_of_adults(self, increase_button: str, decrease_button: str, number: int):
+        continue_loop = True
+        while continue_loop:
+            set_adults_num_to_one = self.find_element(By.CSS_SELECTOR,
+                                                      decrease_button)
+            set_adults_num_to_one.click()
+            # select the field holding the adult number
+            adult_element = self.find_element(By.ID, 'group_adults')
+            # get tje current adult number
+            current_adult_number = int(adult_element.get_attribute('value'))
+            if current_adult_number == 1:
+                continue_loop = False
+
+        set_preferred_adult_num = self.find_element(By.CSS_SELECTOR,
+                                                    increase_button)
+        for _ in range(number - 1):
+            set_preferred_adult_num.click()
+
+    def specify_number_of_adults(self, number: int) -> None:
         """
         reduce the default set value to one and
         sets the number of adults to the specified number
         :param number: number of adults to be set
         :return: none
         """
-        continue_loop = True
+
         if not number:
             raise Exception
         else:
@@ -118,21 +137,9 @@ class Booking(webdriver.Chrome):
                 if target_element.is_displayed():
                     target_element.click()
                     # first decrease the default count to 1 before setting the specified count
-                    while continue_loop:
-                        set_adults_num_to_one = self.find_element(By.CSS_SELECTOR,
-                                                                  'button[aria-label="Decrease number of Adults"]')
-                        set_adults_num_to_one.click()
-                        # select the field holding the adult number
-                        adult_element = self.find_element(By.ID, 'group_adults')
-                        # get tje current adult number
-                        current_adult_number = int(adult_element.get_attribute('value'))
-                        if current_adult_number == 1:
-                            continue_loop = False
-
-                    set_preferred_adult_num = self.find_element(By.CSS_SELECTOR,
-                                                                'button[aria-label="Increase number of Adults"]')
-                    for _ in range(number - 1):
-                        set_preferred_adult_num.click()
+                    increase_button = 'button[aria-label="Increase number of Adults"]'
+                    decrease_button = 'button[aria-label="Decrease number of Adults"]'
+                    self.__set_loop_for_number_of_adults(increase_button, decrease_button, number)
 
             except Exception as e:
                 logging.exception(e)
@@ -166,7 +173,31 @@ class Booking(webdriver.Chrome):
                 current_age_position += 1  # increase position by 1
             return True
 
-    def specify_children_number(self, number: int, list_of_children_ages: List) -> bool:
+    def __set_loop_for_number_of_children(self, current_children_number, increase_button, decrease_button,
+                                          number) -> bool:
+        """
+        sets the number for children
+        :return: bool
+        """
+        continue_loop = True
+        while continue_loop:
+            if current_children_number == 0:
+                continue_loop = False
+            else:
+                set_children_num_to_zero = self.find_element(By.CSS_SELECTOR, decrease_button)
+                if set_children_num_to_zero.is_displayed():
+                    set_children_num_to_zero.click()
+                else:
+                    return False
+        set_preferred_children_num = self.find_element(By.CSS_SELECTOR, increase_button)
+        if set_preferred_children_num.is_displayed():
+            for _ in range(number):
+                set_preferred_children_num.click()
+            return True
+        else:
+            return False
+
+    def specify_number_of_children(self, number: int, list_of_children_ages: List) -> bool:
         """
         reduces the default children number to 1 and
         sets the number to the specified number
@@ -184,26 +215,40 @@ class Booking(webdriver.Chrome):
                 children_element = self.find_element(By.ID, 'group_children')
                 # get the current children number casted to integer
                 current_children_number = int(children_element.get_attribute('value'))
-                while continue_loop:
-                    if current_children_number == 0:
-                        continue_loop = False
-                    else:
-                        set_children_num_to_zero = self.find_element(By.CSS_SELECTOR,
-                                                                     'button[aria-label="Decrease number of Children"]')
-                        set_children_num_to_zero.click()
+                increase_button = 'button[aria-label="Increase number of Children"]'
+                decrease_button = 'button[aria-label="Decrease number of Children"]'
+                perform_loop = self.__set_loop_for_number_of_children(current_children_number, increase_button,
+                                                                      decrease_button, number)
 
-                set_preferred_children_num = self.find_element(By.CSS_SELECTOR,
-                                                               'button[aria-label="Increase number of Children"]')
-                for _ in range(number):
-                    set_preferred_children_num.click()
-                # call method to set individual ages for children
-                set_ages = self.__set_children_age(number=number, age_lists=list_of_children_ages)
-                # click the search button to search
-                if set_ages:
-                    return True
+                if perform_loop:
+                    set_ages = self.__set_children_age(number=number, age_lists=list_of_children_ages)
+                    # click the search button to search
+                    if set_ages:
+                        return True
 
             except Exception as e:
                 logging.exception(e)
+
+    def __set_loop_for_number_of_rooms(self, current_number_of_rooms: int, number: int, increase_button: str,
+                                       decrease_button: str) -> bool:
+        continue_loop = True
+        while continue_loop:
+            if current_number_of_rooms == 1:
+                continue_loop = False
+            else:
+                set_number_of_rooms_to_one = self.find_element(By.CSS_SELECTOR, decrease_button)
+                if set_number_of_rooms_to_one.is_displayed():
+                    set_number_of_rooms_to_one.click()
+                else:
+                    return False
+
+        set_preferred_number_of_rooms = self.find_element(By.CSS_SELECTOR, increase_button)
+        if set_preferred_number_of_rooms.is_displayed():
+            for _ in range(number - 1):
+                set_preferred_number_of_rooms.click()
+            return True
+        else:
+            return False
 
     def specify_number_of_rooms(self, number: int) -> None:
         """
@@ -212,7 +257,6 @@ class Booking(webdriver.Chrome):
         :param number:
         :return: bool
         """
-        continue_loop = True
         if not number:
             raise Exception("Number should not be empty")
         else:
@@ -223,20 +267,14 @@ class Booking(webdriver.Chrome):
                     EC.presence_of_element_located((By.ID, "no_rooms")))
                 # get the current children number casted to integer
                 current_number_of_rooms = int(room_element.get_attribute('value'))
-                while continue_loop:
-                    if current_number_of_rooms == 1:
-                        continue_loop = False
-                    else:
-                        set_number_of_rooms_to_one = self.find_element(By.CSS_SELECTOR,
-                                                                       'button[aria-label="Decrease number of Rooms"]')
-                        set_number_of_rooms_to_one.click()
+                increase_button = 'button[aria-label="Increase number of Rooms"]'
+                decrease_button = 'button[aria-label="Decrease number of Rooms"]'
+                perform_loop = self.__set_loop_for_number_of_rooms(current_number_of_rooms, number, increase_button,
+                                                                   decrease_button)
 
-                set_preferred_number_of_rooms = self.find_element(By.CSS_SELECTOR,
-                                                                  'button[aria-label="Increase number of Rooms"]')
-                for _ in range(number - 1):
-                    set_preferred_number_of_rooms.click()
-                # continue to search when done
-                self.__click_search()
+                if perform_loop:
+                    # continue to search when done
+                    self.__click_search()
             except Exception as e:
                 logging.exception(e)
 

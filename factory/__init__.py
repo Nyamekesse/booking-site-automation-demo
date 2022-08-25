@@ -4,11 +4,10 @@ import sys
 
 logs = os.path.join(os.getcwd(), 'logs')
 
-logs_err = os.path.join(logs, 'error')
-
 if not os.path.exists(logs):
     os.mkdir(logs)
 
+# initializes logging
 logging.basicConfig(filename=os.path.join(logs, 'logs.log'), level=logging.ERROR,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
